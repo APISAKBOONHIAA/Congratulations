@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Congratulations 💖</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Mali:wght@300;400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<style>
+*{-webkit-tap-highlight-color:transparent;}
+
+body{
+margin:0;
+font-family:'Mali',sans-serif;
+background:#ffeef5;
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+min-height:100dvh;
+overflow:hidden;
+}
+
+/* start screen */
+#startScreen{
+position:fixed;
+inset:0;
+background:#ffeef5;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+text-align:center;
+padding:20px;
+z-index:9999;
+color:#d6457f;
+}
+#startScreen p{color:#777;}
+#startScreen button{
+padding:12px 22px;
+border:none;
+border-radius:20px;
+background:#ffb6d9;
+font-size:16px;
+cursor:pointer;
+}
+
+/* music button */
+#musicBtn{
+position:fixed;
+top:14px;
+right:14px;
+width:42px;
+height:42px;
+padding:0;
+margin:0;
+border-radius:50%;
+font-size:18px;
+background:rgba(255,182,217,.6);
+z-index:10001;
+display:none;
+}
+
+/* card */
+.card{
+width:min(360px,92vw);
+height:min(460px,86vh);
+height:min(460px,86dvh);
+position:relative;
+perspective:2000px;
+}
+
+.front,.inside{
+position:absolute;
+width:100%;
+height:100%;
+border-radius:25px;
+-webkit-backface-visibility:hidden;
+backface-visibility:hidden;
+box-shadow:0 10px 30px rgba(0,0,0,.2);
+}
+
+.front{
+background:linear-gradient(135deg,#ffd6e7,#fff);
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+text-align:center;
+cursor:pointer;
+transition:1s;
+pointer-events:auto;
+}
+
+.inside{
+background:#fff;
+padding:20px;
+box-sizing:border-box;
+text-align:center;
+transform:rotateY(-180deg);
+opacity:0;
+transition:1s;
+overflow:auto;
+pointer-events:none;
+}
+
+.card.open .front{
+transform:rotateY(180deg);
+opacity:0;
+pointer-events:none;
+}
+
+.card.open .inside{
+transform:rotateY(0);
+opacity:1;
+pointer-events:auto;
+}
+
+/* buttons */
+button{
+border:none;
+padding:10px 15px;
+margin:6px;
+border-radius:20px;
+background:#ffd8e8;
+cursor:pointer;
+font-family:inherit;
+font-size:14px;
+transition:.3s;
+}
+button:hover{transform:scale(1.05);}
+
+/* back button */
+.backBtn{
+position:absolute;
+top:12px;
+left:12px;
+margin:0;
+padding:0;
+width:38px;
+height:38px;
+border-radius:50%;
+background:rgba(255,182,217,0.25);
+-webkit-backdrop-filter:blur(6px);
+backdrop-filter:blur(6px);
+font-size:18px;
+color:#ff4f93;
+display:flex;
+align-items:center;
+justify-content:center;
+transition:.25s;
+}
+.backBtn:hover{
+transform:scale(1.1);
+background:rgba(255,182,217,0.45);
+}
+
+/* kitty */
+.kitty{width:110px;max-width:40%;}
+
+/* memory */
+.memory{
+width:100%;
+height:220px;
+object-fit:contain;
+background:#fff5f9;
+border-radius:15px;
+margin-top:10px;
+transition:opacity .4s;
+}
+
+/* message */
+.message{
+margin-top:10px;
+padding:12px;
+background:#fff5f9;
+border-radius:15px;
+line-height:1.8;
+color:#555;
+white-space:pre-line;
+}
+
+/* effects */
+.effect{
+position:fixed;
+animation:fall linear forwards;
+pointer-events:none;
+z-index:10000;
+}
+
+@keyframes fall{
+0%{transform:translateY(0);opacity:1;}
+100%{transform:translateY(110vh);opacity:0;}
+}
+
+#memoryBox{margin-top:10px;}
+</style>
+</head>
+
+<body>
+
+<!-- 🎵 เพลง (ถ้าจะเปลี่ยนเพลง แก้ลิงก์ src ตรงนี้ที่เดียว) -->
+<audio id="bgm" loop preload="auto">
+  <source src="https://files.catbox.moe/2fn4sh" type="audio/mpeg">
+</audio>
+
+<button id="musicBtn" onclick="toggleMusic()" aria-label="เปิด/ปิดเพลง">🔊</button>
+
+<!-- start -->
+<div id="startScreen">
+<h2>🎉 Congratulations 💖</h2>
+<p>มีของขวัญเล็ก ๆ ให้เกรซซี่นะ</p>
+<button onclick="startSite()">🎁 เปิดการ์ดเลย</button>
+</div>
+
+<!-- card -->
+<div class="card" id="card">
+
+<div class="front" onclick="openCard()">
+<img class="kitty" alt="Kitty" src="https://files.catbox.moe/o73f3e.png">
+<h2>🎉 Congratulations 💖</h2>
+<p>วันนี้เป็นวันดีของเกรซซี่นะ ✨</p>
+</div>
+
+<div class="inside">
+
+<button class="backBtn" onclick="goBack()" aria-label="กลับ">←</button>
+
+<h3>💌</h3>
+
+<button onclick="showMessage()">💬 ข้อความ</button>
+<button onclick="toggleMemory()">📸 ความทรงจำ</button>
+
+<!-- 📸 MEMORY -->
+<div id="memoryBox" style="display:none;">
+<img class="memory" id="memoryImg" alt="Memory" src="https://files.catbox.moe/2qwzw8.jpg">
+<p id="memoryCount" style="color:#aaa;margin-top:5px">Memory 1 / 2 💖</p>
+<button onclick="nextPhoto()">➡ เปลี่ยนรูป</button>
+</div>
+
+<!-- 💬 MESSAGE -->
+<div id="msgBox" class="message" style="display:none;"></div>
+
+<p style="margin-top:10px;color:#aaa">
+ยินดีด้วยจริง ๆ นะ 🎉💖
+</p>
+
+</div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+/* 🎵 music */
+function startSite(){
+  $("startScreen").style.display = "none";
+
+  const music = $("bgm");
+  music.currentTime = 0;
+  music.volume = 1;
+  const playing = music.play();
+  if (playing && playing.catch) playing.catch(() => {});
+
+  const btn = $("musicBtn");
+  btn.style.display = "block";
+  btn.textContent = "🔊";
+}
+
+function toggleMusic(){
+  const music = $("bgm");
+  const btn = $("musicBtn");
+  if (music.paused) {
+    const playing = music.play();
+    if (playing && playing.catch) playing.catch(() => {});
+    btn.textContent = "🔊";
+  } else {
+    music.pause();
+    btn.textContent = "🔇";
+  }
+}
+
+/* 🎉 open */
+function openCard(){
+  $("card").classList.add("open");
+  setTimeout(() => {
+    confettiBurst();
+    effects();
+  }, 400);
+}
+
+/* 🎊 confetti */
+function confettiBurst(){
+  if (typeof confetti === "function") {
+    confetti({ particleCount:150, spread:90, origin:{ y:0.6 } });
+  }
+}
+
+/* 💬 message */
+const text = `🎉 Congratulations 🎉
+
+ยินดีด้วยนะ ✨
+
+ไม่ว่าจะเรื่องอะไรที่ทำให้เกรซยิ้มได้วันนี้
+ผมก็อยากให้มันคงอยู่แบบนี้นาน ๆ
+
+เก่งมากนะ 💖`;
+
+let typingTimer = null;
+
+function showMessage(){
+  const box = $("msgBox");
+  box.style.display = "block";
+  box.textContent = "";
+  clearInterval(typingTimer);
+
+  const chars = Array.from(text);
+  let i = 0;
+  typingTimer = setInterval(() => {
+    if (i >= chars.length) { clearInterval(typingTimer); return; }
+    box.textContent += chars[i];
+    i++;
+  }, 35);
+
+  effects();
+}
+
+/* 📸 memory (เพิ่มรูปใหม่ได้โดยเพิ่มลิงก์ในลิสต์นี้ ตัวนับจะเปลี่ยนเอง) */
+const photos = [
+  "https://files.catbox.moe/2qwzw8.jpg",
+  "https://files.catbox.moe/j1ru75.png"
+];
+
+photos.forEach((url) => { const im = new Image(); im.src = url; }); // โหลดรูปไว้ล่วงหน้า
+
+let p = 0;
+let slideTimer = null;
+let fadeTimer = null;
+
+function showPhoto(index){
+  const img = $("memoryImg");
+  p = (index + photos.length) % photos.length;
+  img.style.opacity = 0;
+  clearTimeout(fadeTimer);
+  fadeTimer = setTimeout(() => {
+    img.src = photos[p];
+    $("memoryCount").textContent = "Memory " + (p + 1) + " / " + photos.length + " 💖";
+    img.style.opacity = 1;
+  }, 400);
+}
+
+function startSlide(){
+  stopSlide();
+  if (photos.length < 2) return;
+  slideTimer = setInterval(() => showPhoto(p + 1), 3000);
+}
+
+function stopSlide(){
+  clearInterval(slideTimer);
+  slideTimer = null;
+}
+
+function toggleMemory(){
+  const box = $("memoryBox");
+  const show = box.style.display !== "block";
+  box.style.display = show ? "block" : "none";
+  if (show) startSlide(); else stopSlide();
+  effects();
+}
+
+function nextPhoto(){
+  if (photos.length > 1) showPhoto(p + 1);
+  if ($("memoryBox").style.display === "block") startSlide(); // รีเซ็ตเวลานับใหม่
+  effects();
+}
+
+/* 🔙 back */
+function goBack(){
+  stopSlide();
+  clearInterval(typingTimer);
+  $("msgBox").style.display = "none";
+  $("memoryBox").style.display = "none";
+  $("card").classList.remove("open");
+  effects();
+}
+
+/* ✨ effects */
+function effects(){
+  const icons = ["🎉","💖","✨","🌸","🥳"];
+
+  for (let i = 0; i < 18; i++) {
+    const e = document.createElement("div");
+    e.className = "effect";
+    e.textContent = icons[Math.floor(Math.random() * icons.length)];
+
+    e.style.left = Math.random() * 100 + "vw";
+    e.style.top = "-50px";
+    e.style.fontSize = (18 + Math.random() * 18) + "px";
+    e.style.animationDuration = (2 + Math.random() * 2.5) + "s";
+
+    document.body.appendChild(e);
+    setTimeout(() => e.remove(), 5000);
+  }
+}
+</script>
+
+</body>
+</html>
